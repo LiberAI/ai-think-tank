@@ -92,9 +92,9 @@ def build_system_prompt(disc: Discussion, model: ModelSpec) -> str:
     )
 
 
-def build_messages(disc: Discussion, model: ModelSpec) -> list[dict]:
+def build_messages(disc: Discussion, model: ModelSpec, history: list) -> list[dict]:
     msgs = [{"role": "system", "content": build_system_prompt(disc, model)}]
-    if not disc.history:
+    if not history:
         msgs.append({
             "role": "user",
             "content": "You are opening the discussion. Share your initial perspective.",
@@ -102,7 +102,7 @@ def build_messages(disc: Discussion, model: ModelSpec) -> list[dict]:
         return msgs
     transcript = "\n\n".join(
         f"{('You' if m.model_id == model.id else m.model_name)}: {m.content}"
-        for m in disc.history
+        for m in history
     )
     msgs.append({
         "role": "user",
@@ -124,8 +124,7 @@ def truncate(content: str, char_limit: int) -> str:
     return cut + "…"
 
 
-async def call_model(client: httpx.AsyncClient, disc: Discussion, model: ModelSpec):
-    started = time.monotonic()
+async def call_model(client: httpx.AsyncClient, disc: Discussion, model: ModelSpec, history: list) -> str:
     api_key = os.environ.get("OPENROUTER_API_KEY", "")
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -135,7 +134,7 @@ async def call_model(client: httpx.AsyncClient, disc: Discussion, model: ModelSp
     }
     body = {
         "model": model.id,
-        "messages": build_messages(disc, model),
+        "messages": build_messages(disc, model, history),
         "max_tokens": max(256, disc.char_limit),
         "temperature": 0.85,
     }
@@ -143,45 +142,26 @@ async def call_model(client: httpx.AsyncClient, disc: Discussion, model: ModelSp
         f"{OPENROUTER_BASE_URL}/chat/completions",
         json=body,
         headers=headers,
-        timeout=90.0,
+        timeout=120.0,
     )
     if r.status_code >= 400:
         raise RuntimeError(f"HTTP {r.status_code}: {r.text[:200]}")
     data = r.json()
-    content = truncate(data["choices"][0]["message"]["content"], disc.char_limit)
-    elapsed_ms = int((time.monotonic() - started) * 1000)
-    return model, content, elapsed_ms
-
-
-async def race_models(client, disc, eligible):
-    """Fire all eligible models in parallel; return the first successful result."""
-    tasks = {asyncio.create_task(call_model(client, disc, m)): m for m in eligible}
-    pending = set(tasks.keys())
-    errors: list[str] = []
-    winner = None
-    try:
-        while pending and winner is None:
-            done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
-            for t in done:
-                exc = t.exception()
-                if exc is not None:
-                    errors.append(f"{tasks[t].name}: {exc}")
-                else:
-                    winner = t.result()
-                    break
-    finally:
-        for t in tasks:
-            if not t.done():
-                t.cancel()
-        await asyncio.gather(*tasks.keys(), return_exceptions=True)
-    return winner, errors
+    return truncate(data["choices"][0]["message"]["content"], disc.char_limit)
 
 
 async def run_discussion(disc: Discussion) -> None:
+    """Each model runs its own loop, firing as soon as it's free and off cooldown.
+
+    Slow responses are NOT cancelled - they land on the transcript whenever they
+    return, even if other models have spoken in the meantime (so they're replying
+    to a stale snapshot). After landing a message a model must wait `cooldown`
+    other messages before firing again.
+    """
     disc.status = "running"
-    cooldown = math.ceil(len(disc.models) / 2) if len(disc.models) > 1 else 0
-    # Cooldown must be < N so there's always at least one eligible model.
-    cooldown = min(cooldown, len(disc.models) - 1)
+    n = len(disc.models)
+    cooldown = math.ceil(n / 2) if n > 1 else 0
+    cooldown = min(cooldown, n - 1)
 
     emit(disc, {
         "type": "start",
@@ -193,39 +173,80 @@ async def run_discussion(disc: Discussion) -> None:
         "models": [{"id": m.id, "name": m.name} for m in disc.models],
     })
 
+    fired = 0  # total requests fired (caps at max_turns)
+    notify = asyncio.Event()  # fires when transcript grows (woken by announce())
+    MAX_CONSECUTIVE_ERRORS = 5
+
+    def announce():
+        nonlocal notify
+        old, notify = notify, asyncio.Event()
+        old.set()
+
+    async def speaker_loop(client: httpx.AsyncClient, model: ModelSpec):
+        nonlocal fired
+        errors_in_a_row = 0
+        while fired < disc.max_turns and errors_in_a_row < MAX_CONSECUTIVE_ERRORS:
+            last = disc.last_spoke.get(model.id)
+            current_len = len(disc.history)
+            # Cooldown: wait until `cooldown` other messages have appeared since I spoke.
+            if last is not None and (current_len - last) <= cooldown:
+                ev = notify
+                await ev.wait()
+                continue
+            if fired >= disc.max_turns:
+                return
+
+            fired += 1
+            snapshot_len = len(disc.history)
+            snapshot = list(disc.history)
+            emit(disc, {
+                "type": "speaker_started",
+                "model_id": model.id,
+                "model_name": model.name,
+                "history_len_at_start": snapshot_len,
+            })
+            started = time.monotonic()
+            try:
+                content = await call_model(client, disc, model, snapshot)
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:
+                errors_in_a_row += 1
+                # Release the slot so other speakers can still reach max_turns successes.
+                fired -= 1
+                emit(disc, {
+                    "type": "speaker_failed",
+                    "model_id": model.id,
+                    "model_name": model.name,
+                    "error": str(e),
+                })
+                # Backoff on repeated failures so we don't hammer a broken model.
+                await asyncio.sleep(min(2 ** errors_in_a_row, 30))
+                continue
+
+            errors_in_a_row = 0
+            elapsed_ms = int((time.monotonic() - started) * 1000)
+            msg = Message(
+                turn=len(disc.history) + 1,
+                model_id=model.id,
+                model_name=model.name,
+                content=content,
+                elapsed_ms=elapsed_ms,
+            )
+            disc.history.append(msg)
+            disc.last_spoke[model.id] = len(disc.history) - 1
+            emit(disc, {
+                "type": "message",
+                "message": asdict(msg),
+                "history_len_at_start": snapshot_len,
+                "stale_by": (len(disc.history) - 1) - snapshot_len,
+            })
+            announce()
+
     try:
         async with httpx.AsyncClient() as client:
-            for turn in range(1, disc.max_turns + 1):
-                eligible = [
-                    m for m in disc.models
-                    if turn - disc.last_spoke.get(m.id, -10**9) > cooldown
-                ]
-                if not eligible:
-                    eligible = list(disc.models)
-
-                emit(disc, {
-                    "type": "turn_started",
-                    "turn": turn,
-                    "eligible": [m.id for m in eligible],
-                })
-
-                winner, errors = await race_models(client, disc, eligible)
-                if winner is None:
-                    emit(disc, {"type": "turn_failed", "turn": turn, "errors": errors})
-                    continue
-
-                model, content, elapsed_ms = winner
-                msg = Message(
-                    turn=turn,
-                    model_id=model.id,
-                    model_name=model.name,
-                    content=content,
-                    elapsed_ms=elapsed_ms,
-                )
-                disc.history.append(msg)
-                disc.last_spoke[model.id] = turn
-                emit(disc, {"type": "message", "message": asdict(msg)})
-
+            tasks = [asyncio.create_task(speaker_loop(client, m)) for m in disc.models]
+            await asyncio.gather(*tasks, return_exceptions=True)
         disc.status = "completed"
         emit(disc, {"type": "completed"})
     except Exception as e:

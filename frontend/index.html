@@ -318,62 +318,94 @@
       renderMeta(body);
       const elById = renderParticipants(data.models);
       const messages = $('#messages');
+      const ctx = {
+        cooldown: data.cooldown,
+        maxTurns: data.max_turns,
+        historyLen: 0,
+        inFlight: new Set(),
+        lastSpokeAt: {},
+      };
 
       const ev = new EventSource(`/api/discussions/${data.id}/stream`);
       ev.onmessage = (e) => {
         const msg = JSON.parse(e.data);
-        handleEvent(msg, elById, messages);
+        handleEvent(msg, elById, messages, ctx);
       };
       ev.onerror = () => {
         setStatus('Stream connection lost.', false);
       };
     }
 
-    function handleEvent(data, elById, messages) {
+    // Per-model state: 'idle' | 'thinking' | 'cooldown' | 'spoke'
+    const stateBag = {};
+
+    function refreshStates(elById, ctx) {
+      // ctx: { historyLen, cooldown, lastSpokeAt: {id: index}, inFlight: Set }
+      Object.entries(elById).forEach(([id, el]) => {
+        if (ctx.inFlight.has(id)) {
+          setState(el, 'thinking', 'thinking…');
+        } else if (id in ctx.lastSpokeAt && (ctx.historyLen - ctx.lastSpokeAt[id]) <= ctx.cooldown) {
+          const remaining = ctx.cooldown - (ctx.historyLen - ctx.lastSpokeAt[id]) + 1;
+          setState(el, 'cooldown', `cooldown · ${remaining}`);
+        } else if (id in ctx.lastSpokeAt) {
+          setState(el, '', 'idle');
+        } else {
+          setState(el, '', 'idle');
+        }
+      });
+    }
+
+    function handleEvent(data, elById, messages, ctx) {
       switch (data.type) {
         case 'start':
-          setStatus(`Convened — ${data.models.length} models, ${data.max_turns} turns, cooldown ${data.cooldown}.`);
+          ctx.cooldown = data.cooldown;
+          ctx.maxTurns = data.max_turns;
+          setStatus(`Convened — ${data.models.length} models, up to ${data.max_turns} messages, cooldown ${data.cooldown}.`);
           break;
-        case 'turn_started':
-          Object.entries(elById).forEach(([id, el]) => {
-            if (data.eligible.includes(id)) {
-              setState(el, 'thinking', 'thinking…');
-            } else {
-              setState(el, 'cooldown', 'cooldown');
-            }
-          });
-          setStatus(`Turn ${data.turn} — ${data.eligible.length} models racing in parallel…`);
+        case 'speaker_started':
+          ctx.inFlight.add(data.model_id);
+          refreshStates(elById, ctx);
+          setStatus(`${ctx.inFlight.size} model(s) in flight · ${ctx.historyLen}/${ctx.maxTurns} messages.`);
           break;
         case 'message': {
           const m = data.message;
+          ctx.inFlight.delete(m.model_id);
+          ctx.historyLen = m.turn; // message.turn is 1-indexed final position
+          ctx.lastSpokeAt[m.model_id] = m.turn - 1;
+
           const li = document.createElement('li');
           li.className = 'message';
           li.style.borderLeftColor = colorFor(m.model_id);
+          const stale = data.stale_by > 0 ? ` · replied to a snapshot ${data.stale_by} message(s) old` : '';
           li.innerHTML = `
             <header>
               <span class="dot" style="background:${colorFor(m.model_id)}"></span>
               <span class="name">${escapeHtml(m.model_name)}</span>
-              <span class="muted">turn ${m.turn} • ${m.elapsed_ms} ms • ${m.content.length} chars</span>
+              <span class="muted">#${m.turn} · ${m.elapsed_ms} ms · ${m.content.length} chars${escapeHtml(stale)}</span>
             </header>
             <p></p>
           `;
           li.querySelector('p').textContent = m.content;
           messages.appendChild(li);
           li.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
           const el = elById[m.model_id];
           if (el) {
             const c = el.querySelector('.count');
             c.textContent = (parseInt(c.textContent || '0', 10) + 1).toString();
-            setState(el, 'spoke', 'just spoke');
           }
+          refreshStates(elById, ctx);
+          setStatus(`${ctx.inFlight.size} in flight · ${ctx.historyLen}/${ctx.maxTurns} messages.`);
           break;
         }
-        case 'turn_failed':
-          setStatus(`Turn ${data.turn} failed: ${(data.errors || []).join(' · ')}`);
+        case 'speaker_failed':
+          ctx.inFlight.delete(data.model_id);
+          refreshStates(elById, ctx);
+          setStatus(`${escapeHtml(data.model_name)} failed: ${escapeHtml(data.error)}`);
           break;
         case 'completed':
           Object.values(elById).forEach(el => setState(el, '', 'done'));
-          setStatus('Discussion complete.', false);
+          setStatus(`Discussion complete · ${ctx.historyLen} messages.`, false);
           break;
         case 'error':
           setStatus('Error: ' + data.message, false);
