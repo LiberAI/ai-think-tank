@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Think Tank</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #131a33;
+      --panel-2: #1a2347;
+      --border: #2b3563;
+      --text: #e9ecf8;
+      --muted: #8a93b8;
+      --accent: #7c8cff;
+      --good: #2dd4bf;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    a { color: var(--accent); }
+    h1, h2, h3 { margin: 0; font-weight: 600; }
+    header.app {
+      padding: 28px 32px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: baseline; gap: 16px;
+    }
+    header.app h1 { font-size: 22px; letter-spacing: 0.2px; }
+    header.app .tagline { color: var(--muted); font-size: 13px; }
+    main { padding: 24px 32px; max-width: 1100px; margin: 0 auto; }
+
+    /* Setup form */
+    .setup {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.25);
+    }
+    .setup h2 { font-size: 16px; margin-bottom: 14px; }
+    .field { display: block; margin-bottom: 14px; }
+    .field > .label { display: block; color: var(--muted); margin-bottom: 6px; font-size: 13px; }
+    textarea, input[type=number], input[type=text] {
+      width: 100%; padding: 10px 12px;
+      background: var(--bg); color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px;
+      font: inherit; outline: none;
+    }
+    textarea { resize: vertical; }
+    textarea:focus, input:focus { border-color: var(--accent); }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    fieldset {
+      margin: 0; border: 1px solid var(--border); border-radius: 10px;
+      padding: 8px 12px 12px; background: var(--panel-2);
+    }
+    fieldset legend { color: var(--muted); padding: 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .model-option {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 4px;
+      border-bottom: 1px dashed rgba(255,255,255,0.05);
+      cursor: pointer;
+    }
+    .model-option:last-child { border-bottom: 0; }
+    .model-option input { accent-color: var(--accent); }
+    .model-option .id { color: var(--muted); font-size: 12px; margin-left: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
+    button.primary {
+      margin-top: 14px;
+      background: var(--accent); color: #0b1020;
+      border: 0; border-radius: 10px; padding: 11px 16px;
+      font-weight: 600; cursor: pointer;
+    }
+    button.primary:disabled { opacity: 0.6; cursor: progress; }
+
+    /* Discussion view */
+    .discussion {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 800px) { .discussion { grid-template-columns: 1fr; } }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+    }
+    .participants h3 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .participant {
+      display: grid; grid-template-columns: auto 1fr auto auto; gap: 10px; align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px dashed rgba(255,255,255,0.06);
+    }
+    .participant:last-child { border-bottom: 0; }
+    .participant .name { font-weight: 600; }
+    .state {
+      font-size: 11px; padding: 3px 8px; border-radius: 999px;
+      background: rgba(255,255,255,0.06); color: var(--muted);
+    }
+    .state.thinking { background: rgba(124,140,255,0.18); color: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+    .state.cooldown { background: rgba(245,158,11,0.15); color: var(--warn); }
+    .state.spoke { background: rgba(45,212,191,0.15); color: var(--good); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
+    .count { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; min-width: 20px; text-align: right; }
+
+    .transcript .meta h2 { font-size: 18px; margin-bottom: 6px; }
+    .transcript details { margin: 8px 0 14px; color: var(--muted); }
+    .transcript details pre { white-space: pre-wrap; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
+    .messages { list-style: none; padding: 0; margin: 0; }
+    .messages li.message {
+      padding: 10px 14px;
+      margin: 10px 0;
+      background: var(--panel-2);
+      border-left: 3px solid var(--border);
+      border-radius: 10px;
+    }
+    .messages li.message header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .messages li.message header .name { font-weight: 600; }
+    .messages li.message header .muted { color: var(--muted); font-size: 12px; margin-left: auto; }
+    .messages li.message p { margin: 0; white-space: pre-wrap; }
+
+    .status-bar {
+      margin-top: 12px; padding: 8px 12px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      color: var(--muted); font-size: 13px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .status-bar .spinner {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--accent); animation: pulse 1.2s ease-in-out infinite;
+    }
+    .actions { margin-top: 14px; display: flex; gap: 8px; }
+    button.ghost {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px;
+      cursor: pointer;
+    }
+    .error-banner { background: rgba(239,68,68,0.12); color: #fecaca; border: 1px solid rgba(239,68,68,0.4); padding: 10px 12px; border-radius: 10px; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <header class="app">
+    <h1>AI Think Tank</h1>
+    <span class="tagline">Models brainstorm in parallel — the fastest one talks first.</span>
+  </header>
+
+  <main>
+    <section id="setup" class="setup">
+      <h2>Convene a discussion</h2>
+      <div id="health-banner"></div>
+      <form id="setup-form">
+        <label class="field">
+          <span class="label">Topic</span>
+          <textarea name="topic" rows="2" required placeholder="e.g. How should small newsrooms adopt AI without losing trust?"></textarea>
+        </label>
+        <label class="field">
+          <span class="label">Evidence / context (optional)</span>
+          <textarea name="context" rows="6" placeholder="Background facts, sources, constraints…"></textarea>
+        </label>
+        <div class="row">
+          <label class="field">
+            <span class="label">Character limit per reply</span>
+            <input type="number" name="char_limit" value="600" min="80" max="4000" />
+          </label>
+          <label class="field">
+            <span class="label">Max turns</span>
+            <input type="number" name="max_turns" value="12" min="1" max="100" />
+          </label>
+        </div>
+        <fieldset>
+          <legend>Participants</legend>
+          <div id="model-picker"></div>
+        </fieldset>
+        <button class="primary" type="submit">Convene the think tank</button>
+      </form>
+    </section>
+
+    <section id="discussion" class="discussion" hidden>
+      <aside class="panel participants">
+        <h3>Participants</h3>
+        <div id="participants-list"></div>
+        <div class="actions">
+          <button class="ghost" id="new-discussion">New discussion</button>
+        </div>
+      </aside>
+      <div class="panel transcript">
+        <div class="meta" id="meta"></div>
+        <ol class="messages" id="messages"></ol>
+        <div class="status-bar" id="status-bar">
+          <span class="spinner"></span>
+          <span id="status-text">Connecting…</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+    const COLORS = ['#7c8cff', '#2dd4bf', '#f472b6', '#fbbf24', '#60a5fa', '#a78bfa', '#34d399', '#fb7185'];
+    function colorFor(id) {
+      let h = 5381;
+      for (let i = 0; i < id.length; i++) h = ((h << 5) + h + id.charCodeAt(i)) >>> 0;
+      return COLORS[h % COLORS.length];
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    async function init() {
+      // Health
+      try {
+        const h = await fetch('/api/health').then(r => r.json());
+        if (!h.openrouter_configured) {
+          $('#health-banner').innerHTML = '<div class="error-banner">⚠ OPENROUTER_API_KEY is not set on the server. Discussions will fail to start until you configure it.</div>';
+        }
+      } catch {}
+      // Models
+      const models = await fetch('/api/models').then(r => r.json());
+      const picker = $('#model-picker');
+      models.forEach((m, i) => {
+        const id = 'm-' + i;
+        const label = document.createElement('label');
+        label.className = 'model-option';
+        label.innerHTML = `
+          <input type="checkbox" id="${id}" data-model-id="${escapeHtml(m.id)}" data-model-name="${escapeHtml(m.name)}" checked />
+          <span class="dot" style="background:${colorFor(m.id)}"></span>
+          <span class="name">${escapeHtml(m.name)}</span>
+          <span class="id">${escapeHtml(m.id)}</span>
+        `;
+        picker.appendChild(label);
+      });
+      $('#setup-form').addEventListener('submit', startDiscussion);
+      $('#new-discussion').addEventListener('click', () => location.reload());
+    }
+
+    async function startDiscussion(e) {
+      e.preventDefault();
+      const f = e.target;
+      const checked = $$('input[type=checkbox]:checked', f);
+      const models = checked.map(c => ({ id: c.dataset.modelId, name: c.dataset.modelName }));
+      if (models.length < 2) { alert('Pick at least 2 models.'); return; }
+      const body = {
+        topic: f.topic.value,
+        context: f.context.value,
+        char_limit: parseInt(f.char_limit.value, 10),
+        max_turns: parseInt(f.max_turns.value, 10),
+        models,
+      };
+      const btn = f.querySelector('button.primary');
+      btn.disabled = true; btn.textContent = 'Starting…';
+      let resp;
+      try {
+        resp = await fetch('/api/discussions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          throw new Error(err.detail || resp.statusText);
+        }
+      } catch (err) {
+        alert('Failed to start: ' + err.message);
+        btn.disabled = false; btn.textContent = 'Convene the think tank';
+        return;
+      }
+      const data = await resp.json();
+      $('#setup').hidden = true;
+      $('#discussion').hidden = false;
+      subscribe(data, body);
+    }
+
+    function renderMeta(body) {
+      const meta = $('#meta');
+      meta.innerHTML = `
+        <h2>${escapeHtml(body.topic)}</h2>
+        ${body.context ? `<details><summary>Evidence / context</summary><pre>${escapeHtml(body.context)}</pre></details>` : ''}
+      `;
+    }
+
+    function renderParticipants(models) {
+      const root = $('#participants-list');
+      root.innerHTML = '';
+      const elById = {};
+      models.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'participant';
+        div.innerHTML = `
+          <span class="dot" style="background:${colorFor(m.id)}"></span>
+          <span class="name">${escapeHtml(m.name)}</span>
+          <span class="state">idle</span>
+          <span class="count">0</span>
+        `;
+        root.appendChild(div);
+        elById[m.id] = div;
+      });
+      return elById;
+    }
+
+    function setState(el, cls, text) {
+      const s = el.querySelector('.state');
+      s.className = 'state ' + cls;
+      s.textContent = text;
+    }
+    function setStatus(text, busy = true) {
+      $('#status-text').textContent = text;
+      $('#status-bar .spinner').style.visibility = busy ? 'visible' : 'hidden';
+    }
+
+    function subscribe(data, body) {
+      renderMeta(body);
+      const elById = renderParticipants(data.models);
+      const messages = $('#messages');
+
+      const ev = new EventSource(`/api/discussions/${data.id}/stream`);
+      ev.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        handleEvent(msg, elById, messages);
+      };
+      ev.onerror = () => {
+        setStatus('Stream connection lost.', false);
+      };
+    }
+
+    function handleEvent(data, elById, messages) {
+      switch (data.type) {
+        case 'start':
+          setStatus(`Convened — ${data.models.length} models, ${data.max_turns} turns, cooldown ${data.cooldown}.`);
+          break;
+        case 'turn_started':
+          Object.entries(elById).forEach(([id, el]) => {
+            if (data.eligible.includes(id)) {
+              setState(el, 'thinking', 'thinking…');
+            } else {
+              setState(el, 'cooldown', 'cooldown');
+            }
+          });
+          setStatus(`Turn ${data.turn} — ${data.eligible.length} models racing in parallel…`);
+          break;
+        case 'message': {
+          const m = data.message;
+          const li = document.createElement('li');
+          li.className = 'message';
+          li.style.borderLeftColor = colorFor(m.model_id);
+          li.innerHTML = `
+            <header>
+              <span class="dot" style="background:${colorFor(m.model_id)}"></span>
+              <span class="name">${escapeHtml(m.model_name)}</span>
+              <span class="muted">turn ${m.turn} • ${m.elapsed_ms} ms • ${m.content.length} chars</span>
+            </header>
+            <p></p>
+          `;
+          li.querySelector('p').textContent = m.content;
+          messages.appendChild(li);
+          li.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          const el = elById[m.model_id];
+          if (el) {
+            const c = el.querySelector('.count');
+            c.textContent = (parseInt(c.textContent || '0', 10) + 1).toString();
+            setState(el, 'spoke', 'just spoke');
+          }
+          break;
+        }
+        case 'turn_failed':
+          setStatus(`Turn ${data.turn} failed: ${(data.errors || []).join(' · ')}`);
+          break;
+        case 'completed':
+          Object.values(elById).forEach(el => setState(el, '', 'done'));
+          setStatus('Discussion complete.', false);
+          break;
+        case 'error':
+          setStatus('Error: ' + data.message, false);
+          break;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
