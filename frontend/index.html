@@ -65,6 +65,11 @@
     .model-option input { accent-color: var(--accent); }
     .model-option .id { color: var(--muted); font-size: 12px; margin-left: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
+    .model-icon {
+      width: 24px; height: 24px; border-radius: 50%; padding: 2px;
+      flex: 0 0 auto; display: inline-block; vertical-align: middle;
+      object-fit: cover; background: rgba(255,255,255,1.0);
+    }
     button.primary {
       margin-top: 14px;
       background: var(--accent); color: #0b1020;
@@ -123,6 +128,124 @@
     .messages li.message header .name { font-weight: 600; }
     .messages li.message header .muted { color: var(--muted); font-size: 12px; margin-left: auto; }
     .messages li.message p { margin: 0; white-space: pre-wrap; }
+    .mention {
+      font-weight: 600;
+      padding: 0 5px;
+      border-radius: 5px;
+      background: rgba(255,255,255,0.07);
+    }
+    .closing-section { margin-top: 22px; }
+    .closing-section .closing-heading {
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .closing-section .closing-question { color: var(--text); font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+    .messages li.reflection { background: rgba(124,140,255,0.06); border-left-style: dashed; }
+    .messages li.reflection header .badge {
+      font-size: 10px; padding: 2px 6px; border-radius: 999px;
+      background: rgba(124,140,255,0.18); color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .shift {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--muted);
+    }
+    .shift-bar {
+      width: 60px; height: 6px; border-radius: 3px;
+      background: rgba(255,255,255,0.08); overflow: hidden;
+      display: inline-block;
+    }
+    .shift-fill { display: block; height: 100%; border-radius: 3px; }
+    .shift-num { font-variant-numeric: tabular-nums; }
+
+    .consensus-section { margin-top: 22px; }
+    .consensus-draft {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      white-space: pre-wrap;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    .consensus-draft.empty { color: var(--muted); font-style: italic; }
+    .consensus-turns { list-style: none; padding: 0; margin: 0; }
+    .consensus-turn {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin: 8px 0;
+    }
+    .consensus-turn header {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      font-size: 13px;
+    }
+    .consensus-turn .turn-num { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .verdict {
+      font-size: 10px; padding: 2px 8px; border-radius: 999px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .verdict.draft { background: rgba(124,140,255,0.18); color: var(--accent); }
+    .verdict.accepted { background: rgba(45,212,191,0.18); color: var(--good); }
+    .verdict.rejected { background: rgba(239,68,68,0.18); color: var(--bad); }
+    .verdict.pending { background: rgba(245,158,11,0.18); color: var(--warn); animation: pulse 1.2s ease-in-out infinite; }
+    .vote-list.live { border-top: 1px dashed rgba(255,255,255,0.06); margin-top: 8px; padding-top: 6px; }
+    .vote-list.live li { animation: vote-in 0.4s ease-out; }
+    @keyframes vote-in {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .consensus-turn .tally { color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; font-size: 12px; }
+    .consensus-turn .summary { margin: 6px 0 0; color: var(--text); }
+    .consensus-turn details summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-top: 6px; }
+    .vote-list { list-style: none; padding: 6px 0 0; margin: 0; }
+    .vote-list li { font-size: 12px; padding: 2px 0; }
+    .vote-badge {
+      font-size: 10px; padding: 1px 6px; border-radius: 999px; margin-right: 6px;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .vote-badge.yes { background: rgba(45,212,191,0.18); color: var(--good); }
+    .vote-badge.no { background: rgba(239,68,68,0.18); color: var(--bad); }
+    .vote-badge.abstain { background: rgba(255,255,255,0.06); color: var(--muted); }
+    .rejected-text {
+      white-space: pre-wrap; background: var(--bg); padding: 10px;
+      border-radius: 8px; border: 1px solid var(--border); margin-top: 6px;
+    }
+    .diff {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px; line-height: 1.45;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-top: 6px;
+      max-height: 360px; overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .diff-line { display: block; padding: 0 4px; border-radius: 2px; }
+    .diff-line.add { background: rgba(45,212,191,0.12); color: #5eead4; }
+    .diff-line.del { background: rgba(239,68,68,0.12); color: #fca5a5; }
+    .diff-line.eq  { color: var(--muted); }
+    .final-summary {
+      margin-top: 22px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--good);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+    .final-summary .closing-heading { color: var(--good); border-bottom-color: rgba(45,212,191,0.25); }
+    .final-summary .summary-text {
+      white-space: pre-wrap; line-height: 1.6;
+      font-size: 15px;
+    }
+    .final-summary .summary-meta { color: var(--muted); font-size: 12px; margin-top: 8px; }
 
     .status-bar {
       margin-top: 12px; padding: 8px 12px;
@@ -191,6 +314,22 @@
       <div class="panel transcript">
         <div class="meta" id="meta"></div>
         <ol class="messages" id="messages"></ol>
+        <section id="closing" class="closing-section" hidden>
+          <h3 class="closing-heading">Closing reflections</h3>
+          <p class="closing-question">Have you revised your initial position?</p>
+          <ol class="messages" id="reflections"></ol>
+        </section>
+        <section id="consensus" class="consensus-section" hidden>
+          <h3 class="closing-heading">Consensus wiki</h3>
+          <p class="closing-question">Models collaboratively edit a shared summary.</p>
+          <div class="consensus-draft empty" id="consensus-draft-text">awaiting first draft…</div>
+          <ol class="consensus-turns" id="consensus-turns"></ol>
+        </section>
+        <section id="final-summary" class="final-summary" hidden>
+          <h3 class="closing-heading">Final consensus summary</h3>
+          <div class="summary-text" id="final-summary-text"></div>
+          <div class="summary-meta" id="final-summary-meta"></div>
+        </section>
         <div class="status-bar" id="status-bar">
           <span class="spinner"></span>
           <span id="status-text">Connecting…</span>
@@ -203,14 +342,186 @@
     const $ = (sel, root = document) => root.querySelector(sel);
     const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
-    const COLORS = ['#7c8cff', '#2dd4bf', '#f472b6', '#fbbf24', '#60a5fa', '#a78bfa', '#34d399', '#fb7185'];
+    const MODEL_COLORS = {
+      'openai/gpt-5.1':                 '#10b981', // emerald
+      'google/gemini-3-flash-preview':  '#60a5fa', // sky blue
+      'perplexity/sonar':               '#22d3ee', // cyan
+      'x-ai/grok-4-fast':               '#ec4899', // pink
+      'deepseek/deepseek-v3.2':         '#a78bfa', // purple
+      'anthropic/claude-sonnet-4.5':    '#f59e0b', // amber
+    };
+    const MODEL_ICONS = {
+      'openai/gpt-5.1':                 'openai.png',
+      'google/gemini-3-flash-preview':  'gemini-color.png',
+      'perplexity/sonar':               'perplexity-color.png',
+      'x-ai/grok-4-fast':               'grok.png',
+      'deepseek/deepseek-v3.2':         'deepseek-color.png',
+      'anthropic/claude-sonnet-4.5':    'claude-color.png',
+    };
+    function modelMark(id, name) {
+      const icon = MODEL_ICONS[id];
+      if (icon) {
+        return `<img class="model-icon" src="/static/icons/${icon}" alt="${escapeHtml(name || '')}" title="${escapeHtml(name || '')}" />`;
+      }
+      return `<span class="dot" style="background:${colorFor(id)}"></span>`;
+    }
+    const FALLBACK_COLORS = ['#7c8cff', '#2dd4bf', '#f472b6', '#fbbf24', '#60a5fa', '#a78bfa', '#34d399', '#fb7185'];
     function colorFor(id) {
+      if (MODEL_COLORS[id]) return MODEL_COLORS[id];
       let h = 5381;
       for (let i = 0; i < id.length; i++) h = ((h << 5) + h + id.charCodeAt(i)) >>> 0;
-      return COLORS[h % COLORS.length];
+      return FALLBACK_COLORS[h % FALLBACK_COLORS.length];
     }
     function escapeHtml(s) {
       return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function escapeRegex(s) {
+      return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    function appendVoteRow(ul, v) {
+      const vli = document.createElement('li');
+      const reason = v.reason ? escapeHtml(v.reason) : '<span style="color:var(--muted)">(no reason)</span>';
+      vli.innerHTML = `<span class="vote-badge ${v.vote}">${v.vote}</span><strong style="color:${colorFor(v.model_id)}">${escapeHtml(v.model_name)}</strong> — ${reason}`;
+      ul.appendChild(vli);
+    }
+
+    function renderConsensusTurn(t, models) {
+      const li = document.createElement('li');
+      li.className = 'consensus-turn';
+      li.dataset.turn = t.turn;
+      li.style.borderLeftColor = colorFor(t.proposer_id);
+      const isDraft = t.kind === 'draft';
+      const isPending = t.pending === true;
+      let verdictCls, verdictLabel, tallyHtml;
+      if (isDraft) {
+        verdictCls = 'draft'; verdictLabel = 'draft'; tallyHtml = '';
+      } else if (isPending) {
+        verdictCls = 'pending'; verdictLabel = 'voting';
+        tallyHtml = `<span class="tally">0 / ${(t.expectedVoters || []).length} votes in</span>`;
+      } else {
+        verdictCls = t.accepted ? 'accepted' : 'rejected';
+        verdictLabel = verdictCls;
+        tallyHtml = `<span class="tally">yes ${t.yes} · no ${t.no} · abstain ${t.abstain}</span>`;
+      }
+      li.innerHTML = `
+        <header>
+          ${modelMark(t.proposer_id, t.proposer_name)}
+          <span class="turn-num">#${t.turn}</span>
+          <span class="name">${escapeHtml(t.proposer_name)}</span>
+          <span class="verdict ${verdictCls}">${verdictLabel}</span>
+          ${tallyHtml}
+        </header>
+        <p class="summary"></p>
+      `;
+      li.querySelector('.summary').innerHTML = highlightMentions(t.summary || '', models);
+
+      if (t.diff && t.diff.length) {
+        const hasChanges = t.diff.some(h => h.op !== '=');
+        if (hasChanges) {
+          const det = document.createElement('details');
+          det.open = true;
+          const sum = document.createElement('summary');
+          sum.textContent = 'Show changes';
+          const pre = document.createElement('div');
+          pre.className = 'diff';
+          t.diff.forEach(h => {
+            const span = document.createElement('span');
+            const cls = h.op === '+' ? 'add' : h.op === '-' ? 'del' : 'eq';
+            span.className = 'diff-line ' + cls;
+            const prefix = h.op === '=' ? '  ' : h.op + ' ';
+            span.textContent = prefix + h.text;
+            pre.appendChild(span);
+          });
+          det.appendChild(sum);
+          det.appendChild(pre);
+          li.appendChild(det);
+        }
+      }
+
+      if (!isDraft) {
+        const ul = document.createElement('ul');
+        ul.className = 'vote-list live';
+        if (isPending) {
+          ul.dataset.expected = (t.expectedVoters || []).length;
+        } else {
+          ul.dataset.expected = (t.votes || []).length;
+          (t.votes || []).forEach(v => appendVoteRow(ul, v));
+        }
+        li.appendChild(ul);
+      }
+
+      if (!isDraft && !isPending && !t.accepted && t.revised && !t.error) {
+        const det2 = document.createElement('details');
+        const sum2 = document.createElement('summary');
+        sum2.textContent = 'Show rejected proposal';
+        const pre = document.createElement('div');
+        pre.className = 'rejected-text';
+        pre.innerHTML = highlightMentions(t.revised, models);
+        det2.appendChild(sum2);
+        det2.appendChild(pre);
+        li.appendChild(det2);
+      }
+      if (t.error) {
+        const errDiv = document.createElement('div');
+        errDiv.className = 'rejected-text';
+        errDiv.style.color = 'var(--bad)';
+        errDiv.textContent = 'Proposal failed: ' + t.error;
+        li.appendChild(errDiv);
+      }
+      return li;
+    }
+
+    function appendVoteToTurn(li, vote) {
+      const ul = li.querySelector('.vote-list.live');
+      if (!ul) return;
+      appendVoteRow(ul, vote);
+      const tally = li.querySelector('header .tally');
+      if (tally) {
+        const expected = parseInt(ul.dataset.expected || ul.children.length, 10);
+        tally.textContent = `${ul.children.length} / ${expected} votes in`;
+      }
+    }
+
+    function finalizeTurn(li, t, models) {
+      const verdict = li.querySelector('header .verdict');
+      const verdictCls = t.accepted ? 'accepted' : 'rejected';
+      verdict.className = 'verdict ' + verdictCls;
+      verdict.textContent = verdictCls;
+      const tally = li.querySelector('header .tally');
+      if (tally) {
+        tally.textContent = `yes ${t.yes} · no ${t.no} · abstain ${t.abstain}`;
+      }
+      if (!t.accepted && t.revised && !t.error) {
+        const det2 = document.createElement('details');
+        const sum2 = document.createElement('summary');
+        sum2.textContent = 'Show rejected proposal';
+        const pre = document.createElement('div');
+        pre.className = 'rejected-text';
+        pre.innerHTML = highlightMentions(t.revised, models);
+        det2.appendChild(sum2);
+        det2.appendChild(pre);
+        li.appendChild(det2);
+      }
+      if (t.error) {
+        const errDiv = document.createElement('div');
+        errDiv.className = 'rejected-text';
+        errDiv.style.color = 'var(--bad)';
+        errDiv.textContent = 'Proposal failed: ' + t.error;
+        li.appendChild(errDiv);
+      }
+    }
+
+    function highlightMentions(text, models) {
+      const escaped = escapeHtml(text);
+      if (!models || !models.length) return escaped;
+      const sorted = [...models].sort((a, b) => b.name.length - a.name.length);
+      const pattern = sorted.map(m => escapeRegex(m.name)).join('|');
+      const re = new RegExp(`@(${pattern})(?![A-Za-z0-9])`, 'gi');
+      return escaped.replace(re, (full, name) => {
+        const m = sorted.find(x => x.name.toLowerCase() === name.toLowerCase());
+        if (!m) return full;
+        return `<span class="mention" style="color:${colorFor(m.id)}">@${escapeHtml(name)}</span>`;
+      });
     }
 
     async function init() {
@@ -230,7 +541,7 @@
         label.className = 'model-option';
         label.innerHTML = `
           <input type="checkbox" id="${id}" data-model-id="${escapeHtml(m.id)}" data-model-name="${escapeHtml(m.name)}" checked />
-          <span class="dot" style="background:${colorFor(m.id)}"></span>
+          ${modelMark(m.id, m.name)}
           <span class="name">${escapeHtml(m.name)}</span>
           <span class="id">${escapeHtml(m.id)}</span>
         `;
@@ -293,7 +604,7 @@
         const div = document.createElement('div');
         div.className = 'participant';
         div.innerHTML = `
-          <span class="dot" style="background:${colorFor(m.id)}"></span>
+          ${modelMark(m.id, m.name)}
           <span class="name">${escapeHtml(m.name)}</span>
           <span class="state">idle</span>
           <span class="count">0</span>
@@ -324,14 +635,17 @@
         historyLen: 0,
         inFlight: new Set(),
         lastSpokeAt: {},
+        models: data.models,
       };
 
       const ev = new EventSource(`/api/discussions/${data.id}/stream`);
+      ctx.ev = ev;
       ev.onmessage = (e) => {
         const msg = JSON.parse(e.data);
         handleEvent(msg, elById, messages, ctx);
       };
       ev.onerror = () => {
+        if (ctx.done) { ev.close(); return; }
         setStatus('Stream connection lost.', false);
       };
     }
@@ -379,13 +693,13 @@
           const stale = data.stale_by > 0 ? ` · replied to a snapshot ${data.stale_by} message(s) old` : '';
           li.innerHTML = `
             <header>
-              <span class="dot" style="background:${colorFor(m.model_id)}"></span>
+              ${modelMark(m.model_id, m.model_name)}
               <span class="name">${escapeHtml(m.model_name)}</span>
               <span class="muted">#${m.turn} · ${m.elapsed_ms} ms · ${m.content.length} chars${escapeHtml(stale)}</span>
             </header>
             <p></p>
           `;
-          li.querySelector('p').textContent = m.content;
+          li.querySelector('p').innerHTML = highlightMentions(m.content, ctx.models);
           messages.appendChild(li);
           li.scrollIntoView({ behavior: 'smooth', block: 'end' });
 
@@ -403,12 +717,141 @@
           refreshStates(elById, ctx);
           setStatus(`${escapeHtml(data.model_name)} failed: ${escapeHtml(data.error)}`);
           break;
+        case 'closing_started':
+          $('#closing').hidden = false;
+          ctx.reflectors = new Set((data.models || []).map(m => m.id));
+          ctx.reflectionsDone = 0;
+          ctx.reflectionsTotal = (data.models || []).length;
+          Object.entries(elById).forEach(([id, el]) => {
+            if (ctx.reflectors.has(id)) setState(el, 'thinking', 'reflecting…');
+          });
+          setStatus(`Closing round · 0/${ctx.reflectionsTotal} reflections in.`);
+          break;
+        case 'reflection': {
+          const m = data.message;
+          ctx.reflectionsDone = (ctx.reflectionsDone || 0) + 1;
+          const list = $('#reflections');
+          const li = document.createElement('li');
+          li.className = 'message reflection';
+          li.style.borderLeftColor = colorFor(m.model_id);
+          const shiftHtml = (m.shift !== null && m.shift !== undefined) ? `
+              <span class="shift" title="Position shift: ${m.shift}/100 (0 = unchanged, 100 = completely revised)">
+                <span class="shift-bar"><span class="shift-fill" style="width:${m.shift}%; background:${colorFor(m.model_id)}"></span></span>
+                <span class="shift-num">${m.shift}</span>
+              </span>` : '';
+          li.innerHTML = `
+            <header>
+              ${modelMark(m.model_id, m.model_name)}
+              <span class="name">${escapeHtml(m.model_name)}</span>
+              <span class="badge">reflection</span>
+              ${shiftHtml}
+              <span class="muted">${m.elapsed_ms} ms · ${m.content.length} chars</span>
+            </header>
+            <p></p>
+          `;
+          li.querySelector('p').innerHTML = highlightMentions(m.content, ctx.models);
+          list.appendChild(li);
+          li.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          const el = elById[m.model_id];
+          if (el) setState(el, 'spoke', 'reflected');
+          setStatus(`Closing round · ${ctx.reflectionsDone}/${ctx.reflectionsTotal} reflections in.`);
+          break;
+        }
+        case 'reflection_failed':
+          ctx.reflectionsDone = (ctx.reflectionsDone || 0) + 1;
+          setStatus(`${escapeHtml(data.model_name)} reflection failed: ${escapeHtml(data.error)}`);
+          break;
+        case 'consensus_started':
+          $('#consensus').hidden = false;
+          ctx.consensusN = data.n;
+          setStatus(`Consensus phase starting · ${data.n} editors, threshold 1+yes ≥ ${data.threshold}.`);
+          break;
+        case 'consensus_proposing': {
+          setStatus(`Consensus turn ${data.turn} · ${data.model_name} ${data.kind === 'draft' ? 'drafting' : 'proposing revision'}…`);
+          const el = elById[data.model_id];
+          if (el) setState(el, 'thinking', data.kind === 'draft' ? 'drafting…' : 'proposing…');
+          break;
+        }
+        case 'consensus_voting': {
+          setStatus(`Consensus turn ${data.turn} · voting on ${data.proposer_name}'s revision (0/${(data.voters || []).length})…`);
+          (data.voters || []).forEach(v => {
+            const el = elById[v.id];
+            if (el) setState(el, 'thinking', 'voting…');
+          });
+          ctx.pendingTurns = ctx.pendingTurns || {};
+          const placeholder = {
+            turn: data.turn,
+            kind: 'revision',
+            pending: true,
+            proposer_id: data.proposer_id,
+            proposer_name: data.proposer_name,
+            summary: data.summary,
+            diff: data.diff || [],
+            revised: data.revised || '',
+            expectedVoters: data.voters || [],
+          };
+          const li = renderConsensusTurn(placeholder, ctx.models);
+          ctx.pendingTurns[data.turn] = li;
+          $('#consensus-turns').appendChild(li);
+          li.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          break;
+        }
+        case 'consensus_vote': {
+          const li = (ctx.pendingTurns || {})[data.turn];
+          if (li) appendVoteToTurn(li, data.vote);
+          const v = data.vote;
+          const el = elById[v.model_id];
+          if (el) {
+            const cls = v.vote === 'yes' ? 'spoke' : (v.vote === 'no' ? 'cooldown' : '');
+            setState(el, cls, v.vote);
+          }
+          if (li) {
+            const tally = li.querySelector('header .tally');
+            if (tally) setStatus(`Consensus turn ${data.turn} · ${tally.textContent}`);
+          }
+          break;
+        }
+        case 'consensus_turn': {
+          const t = data.turn_record;
+          const draftEl = $('#consensus-draft-text');
+          draftEl.classList.remove('empty');
+          draftEl.innerHTML = highlightMentions(data.draft || '', ctx.models);
+          const pending = (ctx.pendingTurns || {})[t.turn];
+          if (pending) {
+            finalizeTurn(pending, t, ctx.models);
+            delete ctx.pendingTurns[t.turn];
+          } else {
+            const li = renderConsensusTurn(t, ctx.models);
+            $('#consensus-turns').appendChild(li);
+            li.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          }
+          Object.values(elById).forEach(e => setState(e, '', 'idle'));
+          break;
+        }
+        case 'consensus_completed': {
+          setStatus(`Consensus complete · final summary: ${(data.draft || '').length} chars.`, false);
+          const fs = $('#final-summary');
+          fs.hidden = false;
+          $('#final-summary-text').innerHTML = highlightMentions(data.draft || '', ctx.models);
+          const savedTo = data.saved_to ? ` · saved to discussions/${data.saved_to}` : '';
+          $('#final-summary-meta').textContent =
+            `${(data.draft || '').length} characters · ${$('#consensus-turns').children.length} consensus turn(s)${savedTo}`;
+          fs.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          break;
+        }
+        case 'consensus_failed':
+          setStatus(`Consensus failed at ${data.stage}: ${data.error}`, false);
+          break;
         case 'completed':
           Object.values(elById).forEach(el => setState(el, '', 'done'));
           setStatus(`Discussion complete · ${ctx.historyLen} messages.`, false);
+          ctx.done = true;
+          if (ctx.ev) ctx.ev.close();
           break;
         case 'error':
           setStatus('Error: ' + data.message, false);
+          ctx.done = true;
+          if (ctx.ev) ctx.ev.close();
           break;
       }
     }
