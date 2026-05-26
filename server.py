@@ -38,7 +38,7 @@ DEFAULT_MODELS = [
     {"id": "openai/gpt-5.1", "name": "GPT-5.1"},
     {"id": "google/gemini-3-flash-preview", "name": "Gemini"},
     {"id": "perplexity/sonar", "name": "Sonar"},
-    {"id": "x-ai/grok-4-fast", "name": "Grok"},
+    {"id": "x-ai/grok-4.3", "name": "Grok"},
     {"id": "deepseek/deepseek-v3.2", "name": "DeepSeek"},
     {"id": "anthropic/claude-sonnet-4.5", "name": "Claude"},
 ]
